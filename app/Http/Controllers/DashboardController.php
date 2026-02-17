@@ -1,0 +1,173 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Student;
+use App\Models\Batch;
+use App\Models\Payment;
+use App\Models\Attendance;
+use App\Models\Lead;
+use App\Models\LeadFollowup;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+
+class DashboardController extends Controller
+{
+    public function index()
+    {
+        $today = now()->format('Y-m-d');
+        $thisMonth = now()->month;
+        $thisYear = now()->year;
+        $lastMonth = now()->subMonth()->month;
+        $lastMonthYear = now()->subMonth()->year;
+
+        // ============================================
+        // TOP ROW - 6 SUMMARY CARDS
+        // ============================================
+
+        // 1. Total Students
+        $totalStudents = Student::count();
+        $newStudentsThisWeek = Student::where('created_at', '>=', now()->startOfWeek())->count();
+
+        // 2. Active Batches
+        $activeBatches = Batch::where('status', 'ongoing')->count();
+        $upcomingBatches = Batch::where('status', 'upcoming')->count();
+        $completedBatches = Batch::where('status', 'completed')->count();
+
+        // 3. Fees Collected (This Month)
+        $feesCollectedThisMonth = Payment::whereMonth('payment_date', $thisMonth)
+            ->whereYear('payment_date', $thisYear)
+            ->sum('amount');
+        
+        $feesCollectedLastMonth = Payment::whereMonth('payment_date', $lastMonth)
+            ->whereYear('payment_date', $lastMonthYear)
+            ->sum('amount');
+
+        // 4. Total Due
+        $totalDue = Student::selectRaw('SUM(final_fee - (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.student_id = students.id)) as total_due')
+            ->value('total_due') ?? 0;
+        
+        $studentsWithDue = Student::selectRaw('students.*, (final_fee - (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.student_id = students.id)) as due_amount')
+            ->having('due_amount', '>', 0)
+            ->count();
+
+        // 5. Today Attendance
+        $totalActiveStudents = Student::whereHas('batch', function($q) use ($today) {
+            $q->where('status', 'ongoing')
+              ->whereDate('start_date', '<=', $today)
+              ->where(function($q2) use ($today) {
+                  $q2->whereNull('end_date')->orWhereDate('end_date', '>=', $today);
+              });
+        })->count();
+
+        $presentToday = Attendance::whereDate('date', $today)->where('status', 'present')->count();
+        $absentToday = Attendance::whereDate('date', $today)->where('status', 'absent')->count();
+        $attendancePercentage = $totalActiveStudents > 0 ? round(($presentToday / $totalActiveStudents) * 100, 1) : 0;
+
+        // 6. Leads Pipeline
+        $followupsToday = LeadFollowup::whereDate('next_followup_date', $today)->count();
+        $overdueFollowups = LeadFollowup::whereDate('next_followup_date', '<', $today)
+            ->whereHas('lead', function($q) {
+                $q->where('status', '!=', 'converted');
+            })
+            ->count();
+        $convertedThisMonth = Lead::where('status', 'converted')
+            ->whereMonth('updated_at', $thisMonth)
+            ->whereYear('updated_at', $thisYear)
+            ->count();
+
+        // ============================================
+        // CHART DATA - Monthly Fee Collection
+        // ============================================
+        $monthlyFeeData = Payment::selectRaw('MONTH(payment_date) as month, SUM(amount) as total')
+            ->whereYear('payment_date', $thisYear)
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->pluck('total', 'month')
+            ->toArray();
+
+        // Fill missing months with 0
+        $chartData = [];
+        $chartLabels = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $chartLabels[] = Carbon::create()->month($i)->format('M');
+            $chartData[] = $monthlyFeeData[$i] ?? 0;
+        }
+
+        // ============================================
+        // LEADS CONVERSION FUNNEL
+        // ============================================
+        $totalLeads = Lead::count();
+        $contactedLeads = Lead::whereIn('status', ['contacted', 'counselling_done', 'converted'])->count();
+        $counsellingDone = Lead::whereIn('status', ['counselling_done', 'converted'])->count();
+        $convertedLeads = Lead::where('status', 'converted')->count();
+
+        $funnelData = [
+            'new' => $totalLeads,
+            'contacted' => $contactedLeads,
+            'counselling' => $counsellingDone,
+            'converted' => $convertedLeads,
+        ];
+
+        // ============================================
+        // ACTIONABLE PANELS
+        // ============================================
+
+        // Panel A: Follow-ups Today & Overdue
+        $todayFollowups = LeadFollowup::with(['lead'])
+            ->whereDate('next_followup_date', '<=', $today)
+            ->whereHas('lead', function($q) {
+                $q->where('status', '!=', 'converted');
+            })
+            ->latest('next_followup_date')
+            ->take(10)
+            ->get()
+            ->map(function($followup) use ($today) {
+                $followup->is_overdue = $followup->next_followup_date < $today;
+                return $followup;
+            });
+
+        // Panel B: Top 10 Due Students
+        $topDueStudents = Student::with(['batch', 'branch'])
+            ->selectRaw('students.*, (final_fee - (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.student_id = students.id)) as due_amount')
+            ->having('due_amount', '>', 0)
+            ->orderBy('due_amount', 'desc')
+            ->take(10)
+            ->get();
+
+        // Panel C: Recent Payments
+        $recentPayments = Payment::with(['student.batch'])
+            ->latest('payment_date')
+            ->take(10)
+            ->get();
+
+        // ============================================
+        // NOTIFICATIONS COUNT
+        // ============================================
+        $notificationsCount = $overdueFollowups + ($studentsWithDue > 0 ? 1 : 0);
+
+        return view('dashboard', compact(
+            // Summary Cards
+            'totalStudents', 'newStudentsThisWeek',
+            'activeBatches', 'upcomingBatches', 'completedBatches',
+            'feesCollectedThisMonth', 'feesCollectedLastMonth',
+            'totalDue', 'studentsWithDue',
+            'attendancePercentage', 'presentToday', 'absentToday',
+            'followupsToday', 'overdueFollowups', 'convertedThisMonth',
+            
+            // Chart Data
+            'chartLabels', 'chartData',
+            'funnelData',
+            
+            // Actionable Panels
+            'todayFollowups',
+            'topDueStudents',
+            'recentPayments',
+            
+            // Notifications
+            'notificationsCount'
+        ));
+    }
+}
