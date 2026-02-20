@@ -8,6 +8,8 @@ use App\Models\Student;
 use App\Models\Branch;
 use App\Models\Course;
 use App\Models\User;
+use App\Models\LeadStatus;
+use App\Models\Batch;
 use Illuminate\Http\Request;
 
 class LeadController extends Controller
@@ -58,7 +60,8 @@ class LeadController extends Controller
         $branches = Branch::where('status', 'active')->get();
         $courses = Course::where('status', 'active')->get();
         $counsellors = User::where('status', 'active')->get(); // Ideally filter by role
-        return view('leads.create', compact('branches', 'courses', 'counsellors'));
+        $statuses = LeadStatus::where('status', 'active')->orderBy('order')->get();
+        return view('leads.create', compact('branches', 'courses', 'counsellors', 'statuses'));
     }
 
     public function store(Request $request)
@@ -74,7 +77,13 @@ class LeadController extends Controller
             'status' => 'required|string',
             // New Fields
             'current_address' => 'nullable|string',
+            'current_city' => 'nullable|string',
+            'current_state' => 'nullable|string',
+            'current_pincode' => 'nullable|string',
             'permanent_address' => 'nullable|string',
+            'permanent_city' => 'nullable|string',
+            'permanent_state' => 'nullable|string',
+            'permanent_pincode' => 'nullable|string',
             'highest_qualification' => 'nullable|string',
             'college_name' => 'nullable|string',
             'percentage' => 'nullable|numeric|between:0,100',
@@ -99,6 +108,16 @@ class LeadController extends Controller
         return view('leads.show', compact('lead', 'branches', 'courses', 'counsellors'));
     }
 
+    public function edit(Lead $lead)
+    {
+        $branches = Branch::where('status', 'active')->get();
+        $courses = Course::where('status', 'active')->get();
+        $counsellors = User::where('status', 'active')->get();
+        $statuses = LeadStatus::where('status', 'active')->orderBy('order')->get();
+        
+        return view('leads.edit', compact('lead', 'branches', 'courses', 'counsellors', 'statuses'));
+    }
+
     public function update(Request $request, Lead $lead)
     {
         // Handle Tab 1 (Info) & Tab 2 (Counselling) updates differently based on input?
@@ -109,7 +128,13 @@ class LeadController extends Controller
             'name' => 'sometimes|required|string|max:255',
             // New Fields for Tab 1
             'current_address' => 'nullable|string',
+            'current_city' => 'nullable|string',
+            'current_state' => 'nullable|string',
+            'current_pincode' => 'nullable|string',
             'permanent_address' => 'nullable|string',
+            'permanent_city' => 'nullable|string',
+            'permanent_state' => 'nullable|string',
+            'permanent_pincode' => 'nullable|string',
             'highest_qualification' => 'nullable|string',
             'college_name' => 'nullable|string',
             'percentage' => 'nullable|numeric|between:0,100',
@@ -176,5 +201,63 @@ class LeadController extends Controller
             ->get();
             
         return view('leads.followups-board', compact('overdue', 'todayFollowups', 'upcoming'));
+    }
+
+    public function kanban(Request $request)
+    {
+        $statuses = LeadStatus::orderBy('order')->get();
+        // Fetch all leads with relationships
+        $query = Lead::with(['branch', 'counsellor']);
+
+        // Filter by assigned user if 'assigned=me'
+        if ($request->has('assigned') && $request->assigned == 'me') {
+            $query->where('assigned_counsellor_id', auth()->id());
+        }
+
+        $leads = $query->latest()->get();
+        
+        // Group leads by status name (lowercase or as stored in DB)
+        // Ensure status mapping aligns with LeadStatus names
+        $leadsByStatus = $leads->groupBy(function($item) {
+            return strtolower($item->status);
+        });
+
+        $branches = Branch::where('status', 'active')->get();
+        $batches = Batch::where('status', 'active')->with('course')->get();
+
+        return view('leads.kanban', compact('statuses', 'leadsByStatus', 'branches', 'batches'));
+    }
+
+    public function updateStatus(Request $request, Lead $lead)
+    {
+        $request->validate([
+            'status' => 'required|string',
+            'batch_id' => 'nullable|exists:batches,id',
+            'joining_date' => 'nullable|date',
+            'lost_reason' => 'nullable|string',
+            'lost_reason_notes' => 'nullable|string',
+        ]);
+
+        $lead->status = $request->status;
+        
+        if ($request->has('batch_id')) {
+            $lead->batch_id = $request->batch_id;
+        }
+        if ($request->has('joining_date')) {
+            $lead->joining_date = $request->joining_date;
+        }
+        if ($request->has('lost_reason')) {
+            $lead->lost_reason = $request->lost_reason;
+        }
+        if ($request->has('lost_reason_notes')) {
+            $lead->lost_reason_notes = $request->lost_reason_notes;
+        }
+
+        $lead->save();
+
+        // Optional: Create Activity Log or History (LeadFollowup?)
+        // $lead->followups()->create([...]);
+
+        return response()->json(['success' => true, 'message' => 'Lead status updated successfully.']);
     }
 }

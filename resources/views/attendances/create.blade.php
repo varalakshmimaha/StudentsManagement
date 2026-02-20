@@ -67,26 +67,26 @@
                             </td>
                             <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                                 <div class="flex items-center space-x-4">
-                                    <label class="inline-flex items-center">
-                                        <input type="radio" class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300" name="attendance[{{ $student->id }}]" value="present" {{ $currentStatus == 'present' ? 'checked' : '' }}>
-                                        <span class="ml-2">Present</span>
+                                    <label class="inline-flex items-center cursor-pointer">
+                                        <input type="radio" class="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-400" name="attendance[{{ $student->id }}]" value="present" {{ $currentStatus == 'present' ? 'checked' : '' }}>
+                                        <span class="ml-2 font-semibold text-green-700">Present</span>
                                     </label>
-                                    <label class="inline-flex items-center">
-                                        <input type="radio" class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300" name="attendance[{{ $student->id }}]" value="absent" {{ $currentStatus == 'absent' ? 'checked' : '' }}>
-                                        <span class="ml-2">Absent</span>
+                                    <label class="inline-flex items-center cursor-pointer">
+                                        <input type="radio" class="h-5 w-5 text-red-600 focus:ring-red-500 border-gray-400" name="attendance[{{ $student->id }}]" value="absent" {{ $currentStatus == 'absent' ? 'checked' : '' }}>
+                                        <span class="ml-2 font-semibold text-red-700">Absent</span>
                                     </label>
-                                    <label class="inline-flex items-center">
-                                        <input type="radio" class="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300" name="attendance[{{ $student->id }}]" value="late" {{ $currentStatus == 'late' ? 'checked' : '' }}>
-                                        <span class="ml-2">Late</span>
+                                    <label class="inline-flex items-center cursor-pointer">
+                                        <input type="radio" class="h-5 w-5 text-yellow-600 focus:ring-yellow-500 border-gray-400" name="attendance[{{ $student->id }}]" value="late" {{ $currentStatus == 'late' ? 'checked' : '' }}>
+                                        <span class="ml-2 font-semibold text-yellow-700">Late</span>
                                     </label>
-                                     <label class="inline-flex items-center">
-                                        <input type="radio" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" name="attendance[{{ $student->id }}]" value="excused" {{ $currentStatus == 'excused' ? 'checked' : '' }}>
-                                        <span class="ml-2">Excused</span>
+                                     <label class="inline-flex items-center cursor-pointer">
+                                        <input type="radio" class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-400" name="attendance[{{ $student->id }}]" value="excused" {{ $currentStatus == 'excused' ? 'checked' : '' }}>
+                                        <span class="ml-2 font-semibold text-blue-700">Excused</span>
                                     </label>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                                <input type="text" name="remarks[{{ $student->id }}]" value="{{ $currentRemark }}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Optional">
+                                <input type="text" name="remarks[{{ $student->id }}]" value="{{ $currentRemark }}" class="shadow appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Optional">
                             </td>
                         </tr>
                     @endforeach

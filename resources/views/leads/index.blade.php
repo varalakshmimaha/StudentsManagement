@@ -6,25 +6,37 @@
 <div class="container mx-auto px-6 py-8">
     <div class="flex flex-col md:flex-row justify-between items-center mb-6">
         <h3 class="text-gray-700 text-3xl font-medium">Leads</h3>
-        <div class="flex space-x-2 mt-4 md:mt-0">
-             <a href="{{ route('leads.index', ['overdue' => 'yes']) }}" class="px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 font-medium">Overdue Follow-ups</a>
-            <a href="{{ route('leads.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 font-medium tracking-wide">Add New Lead</a>
+        
+        <div class="flex items-center gap-4 mt-4 md:mt-0">
+             <!-- View Switcher -->
+            <div class="bg-gray-100 p-1 rounded-lg flex shadow-inner">
+                <a href="{{ route('leads.index') }}" class="px-4 py-2 text-sm font-medium bg-white text-blue-600 shadow rounded-md">
+                    List View
+                </a>
+                <a href="{{ route('leads.kanban') }}" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 rounded-md transition-colors">
+                    Kanban View
+                </a>
+            </div>
+
+            <a href="{{ route('leads.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 font-medium tracking-wide shadow-sm">
+                + Add Lead
+            </a>
         </div>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white shadow rounded-lg p-6 mb-8 border border-gray-100">
+    <div class="bg-white shadow-md rounded-lg p-6 mb-8 border border-gray-300">
         <form method="GET" action="{{ route('leads.index') }}" class="flex flex-col lg:flex-row gap-4 items-end">
             <!-- Search -->
             <div class="flex-grow">
                 <label class="block text-gray-700 text-sm font-bold mb-2">Search Lead</label>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Name, Phone or Email" class="bg-white border border-gray-300 rounded w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Name, Phone or Email" class="bg-white border border-gray-400 rounded w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             
             <!-- Status -->
             <div class="w-full lg:w-48">
                  <label class="block text-gray-700 text-sm font-bold mb-2">Status</label>
-                 <select name="status" class="bg-white border border-gray-300 rounded w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 <select name="status" class="bg-white border border-gray-400 rounded w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
                      <option value="">All Statuses</option>
                      @foreach(['new', 'contacted', 'scheduled', 'counselling_done', 'interested', 'not_interested', 'lost', 'converted'] as $status)
                         <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>{{ ucfirst(str_replace('_', ' ', $status)) }}</option>
@@ -35,7 +47,7 @@
             <!-- Branch -->
             <div class="w-full lg:w-48">
                 <label class="block text-gray-700 text-sm font-bold mb-2">Branch</label>
-                <select name="branch" class="bg-white border border-gray-300 rounded w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select name="branch" class="bg-white border border-gray-400 rounded w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">All Branches</option>
                     @foreach($branches as $branch)
                         <option value="{{ $branch->id }}" {{ request('branch') == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
@@ -45,7 +57,7 @@
              
              <!-- Filter Button -->
             <div class="w-full lg:w-auto">
-                <button type="submit" class="w-full px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-bold transition-colors">Apply Filters</button>
+                <button type="submit" class="w-full px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-bold transition-colors h-10">Apply Filters</button>
             </div>
         </form>
     </div>
@@ -59,6 +71,7 @@
                     <th class="px-6 py-3 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Phone</th>
                     <th class="px-6 py-3 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-3 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
+                    <th class="px-6 py-3 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Interested Courses</th>
                     <th class="px-6 py-3 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Follow-up</th>
                     <th class="px-6 py-3 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -97,6 +110,13 @@
                     </td>
                     <td class="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-500">
                         {{ $lead->counsellor->name ?? 'Unassigned' }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-500">
+                        @if($lead->interested_courses && is_array($lead->interested_courses))
+                            {{ implode(', ', $lead->interested_courses) }}
+                        @else
+                            -
+                        @endif
                     </td>
                      <td class="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-500">
                         @if($lead->next_followup_date)

@@ -19,10 +19,10 @@
 
     <!-- Filters -->
     <form method="GET" action="{{ route('reports.due-report') }}" class="mb-6 bg-white p-4 rounded-lg shadow">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Branch</label>
-                <select name="branch" class="form-select rounded-md shadow-sm w-full">
+                <label class="block mb-2 text-sm font-bold text-gray-700">Branch</label>
+                <select name="branch" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 shadow-sm">
                     <option value="">All Branches</option>
                     @foreach($branches as $branch)
                         <option value="{{ $branch->id }}" {{ request('branch') == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
@@ -30,8 +30,8 @@
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Batch</label>
-                <select name="batch" class="form-select rounded-md shadow-sm w-full">
+                <label class="block mb-2 text-sm font-bold text-gray-700">Batch</label>
+                <select name="batch" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 shadow-sm">
                     <option value="">All Batches</option>
                     @foreach($batches as $batch)
                         <option value="{{ $batch->id }}" {{ request('batch') == $batch->id ? 'selected' : '' }}>{{ $batch->name }}</option>
@@ -39,8 +39,8 @@
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Student Status</label>
-                <select name="status" class="form-select rounded-md shadow-sm w-full">
+                <label class="block mb-2 text-sm font-bold text-gray-700">Student Status</label>
+                <select name="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 shadow-sm">
                     <option value="">All Status</option>
                     <option value="admission_done" {{ request('status') == 'admission_done' ? 'selected' : '' }}>Admission Done</option>
                     <option value="ongoing" {{ request('status') == 'ongoing' ? 'selected' : '' }}>Ongoing</option>
@@ -76,14 +76,14 @@
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
         <table class="min-w-full">
             <thead>
-                <tr class="bg-gray-50">
-                    <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Roll No</th>
-                    <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
-                    <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Batch</th>
-                    <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Branch</th>
-                    <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Due Amount</th>
-                    <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Mobile</th>
-                    <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <tr class="bg-indigo-50/50 border-b border-indigo-100">
+                    <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">Roll No</th>
+                    <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">Student Name</th>
+                    <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">Batch</th>
+                    <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">Branch</th>
+                    <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">Due Amount</th>
+                    <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">Mobile</th>
+                    <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">Status</th>
                 </tr>
             </thead>
             <tbody class="bg-white">

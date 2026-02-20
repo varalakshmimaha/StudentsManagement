@@ -17,20 +17,30 @@
 
     <div class="mt-8">
         <!-- Filters -->
-        <form method="GET" action="{{ route('branches.index') }}" class="mb-4 flex flex-col md:flex-row gap-4">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or code..." class="form-input rounded-md shadow-sm w-full md:w-1/3">
-            
-            <select name="status" class="form-select rounded-md shadow-sm w-full md:w-1/6">
-                <option value="">All Status</option>
-                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
-            </select>
+        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-6">
+            <form method="GET" action="{{ route('branches.index') }}" class="flex flex-col md:flex-row gap-4 items-end">
+                <div class="flex-grow">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Search Branch</label>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or code..." class="bg-white border border-gray-400 rounded-md shadow-sm w-full py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div class="w-full md:w-1/4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+                    <select name="status" class="bg-white border border-gray-400 rounded-md shadow-sm w-full py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Status</option>
+                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                    </select>
+                </div>
 
-            <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500">Filter</button>
-            @if(request()->has('search') || request()->has('status'))
-                <a href="{{ route('branches.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Clear</a>
-            @endif
-        </form>
+                <div class="flex gap-2">
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-bold transition-colors h-10">Filter</button>
+                    @if(request()->hasAny(['search', 'status']))
+                        <a href="{{ route('branches.index') }}" class="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 font-bold transition-colors h-10 text-center flex items-center">Clear</a>
+                    @endif
+                </div>
+            </form>
+        </div>
 
         <div class="flex flex-col">
             <div class="-my-2 py-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">

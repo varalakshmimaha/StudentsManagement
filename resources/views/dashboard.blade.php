@@ -97,7 +97,7 @@
                 <div>
                     <p class="text-sm text-gray-600 mb-1">Follow-ups Today</p>
                     <p class="text-3xl font-bold text-gray-800">{{ $followupsToday }}</p>
-                    <p class="text-xs text-gray-500 mt-2">Overdue: <span class="text-red-600">{{ $overdueFollowups }}</span> | Converted: {{ $convertedThisMonth }}</p>
+                    <p class="text-xs text-gray-500 mt-2">Follow-ups: {{ $followupsToday }} | Converted: {{ $convertedThisMonth }}</p>
                 </div>
                 <div class="bg-indigo-100 rounded-full p-3">
                     <svg class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -111,12 +111,28 @@
     </div>
 
     <!-- SECOND ROW - CHARTS -->
-    <div class="grid grid-cols-1 gap-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Chart 1: Monthly Fee Collection -->
         <div class="bg-white rounded-lg shadow-md p-6">
-            <h4 class="text-lg font-semibold text-gray-800 mb-4">Monthly Fee Collection ({{ now()->year }})</h4>
+            <h4 class="text-lg font-semibold text-gray-800 mb-4 text-center">Monthly Collection (Last 6 Months)</h4>
             <div style="position: relative; height: 300px;">
                 <canvas id="feeCollectionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Chart 2: Attendance Trend -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h4 class="text-lg font-semibold text-gray-800 mb-4 text-center">Attendance Trend (Avg %)</h4>
+            <div style="position: relative; height: 300px;">
+                <canvas id="attendanceTrendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Chart 3: Lead Conversion Trend -->
+        <div class="bg-white rounded-lg shadow-md p-6 lg:col-span-2">
+            <h4 class="text-lg font-semibold text-gray-800 mb-4 text-center">Lead Conversion Trend (Last 6 Months)</h4>
+            <div style="position: relative; height: 350px;">
+                <canvas id="leadConversionChart"></canvas>
             </div>
         </div>
     </div>
@@ -125,44 +141,109 @@
 <!-- Chart.js Script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
-    // Monthly Fee Collection Chart
-    const ctx = document.getElementById('feeCollectionChart').getContext('2d');
-    new Chart(ctx, {
+    // 1. Monthly Fee Collection Chart
+    const ctxFee = document.getElementById('feeCollectionChart').getContext('2d');
+    const feeData = @json($monthlyCollection);
+    new Chart(ctxFee, {
         type: 'bar',
         data: {
-            labels: {!! json_encode($chartLabels) !!},
+            labels: feeData.map(d => d.month_label),
             datasets: [{
-                label: 'Fee Collection (₹)',
-                data: {!! json_encode($chartData) !!},
-                backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                label: 'Collection (₹)',
+                data: feeData.map(d => d.total),
+                backgroundColor: 'rgba(59, 130, 246, 0.6)',
                 borderColor: 'rgba(59, 130, 246, 1)',
-                borderWidth: 2
+                borderWidth: 1,
+                borderRadius: 5
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    display: false
-                },
+                legend: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
-                            return '₹' + context.parsed.y.toLocaleString();
-                        }
+                        label: function(context) { return '₹' + context.parsed.y.toLocaleString(); }
                     }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '₹' + value.toLocaleString();
-                        }
-                    }
+                    ticks: { callback: function(value) { return '₹' + value.toLocaleString(); } }
                 }
+            }
+        }
+    });
+
+    // 2. Attendance Trend Chart
+    const ctxAttendance = document.getElementById('attendanceTrendChart').getContext('2d');
+    const attendanceData = @json($attendanceTrend);
+    new Chart(ctxAttendance, {
+        type: 'line',
+        data: {
+            labels: attendanceData.map(d => d.month_label),
+            datasets: [{
+                label: 'Avg Attendance %',
+                data: attendanceData.map(d => d.percentage),
+                borderColor: 'rgba(139, 92, 246, 1)',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointBackgroundColor: 'rgba(139, 92, 246, 1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { callback: function(value) { return value + '%'; } }
+                }
+            }
+        }
+    });
+
+    // 3. Lead Conversion Trend Chart
+    const ctxLead = document.getElementById('leadConversionChart').getContext('2d');
+    const leadData = @json($leadConversionTrend);
+    new Chart(ctxLead, {
+        type: 'bar',
+        data: {
+            labels: leadData.map(d => d.month_label),
+            datasets: [
+                {
+                    label: 'Total Leads',
+                    data: leadData.map(d => d.total_leads),
+                    backgroundColor: 'rgba(156, 163, 175, 0.5)',
+                    borderColor: 'rgba(156, 163, 175, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                },
+                {
+                    label: 'Converted',
+                    data: leadData.map(d => d.converted_count),
+                    backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
             }
         }
     });

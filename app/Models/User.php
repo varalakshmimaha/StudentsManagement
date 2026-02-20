@@ -57,6 +57,27 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class, 'permission_user');
+    }
+
+    /**
+     * Check if user has permission directly or via role (if implemented).
+     * For now, we prioritize direct user permissions for modules, 
+     * but Super Admin gets everything.
+     */
+    public function hasPermissionTo($permissionName)
+    {
+        // 1. Super Admin has all access
+        if ($this->role && $this->role->name === 'Super Admin') {
+            return true;
+        }
+
+        // 2. Check direct user permissions
+        return $this->permissions->contains('name', $permissionName);
+    }
+
     public function branches()
     {
         // pivot table: branch_user

@@ -78,38 +78,53 @@ class DashboardController extends Controller
             ->count();
 
         // ============================================
-        // CHART DATA - Monthly Fee Collection
+        // CHART DATA
         // ============================================
-        $monthlyFeeData = Payment::selectRaw('MONTH(payment_date) as month, SUM(amount) as total')
-            ->whereYear('payment_date', $thisYear)
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get()
-            ->pluck('total', 'month')
-            ->toArray();
 
-        // Fill missing months with 0
-        $chartData = [];
-        $chartLabels = [];
-        for ($i = 1; $i <= 12; $i++) {
-            $chartLabels[] = Carbon::create()->month($i)->format('M');
-            $chartData[] = $monthlyFeeData[$i] ?? 0;
-        }
+        // 1. Monthly Collection (Last 6 Months)
+        $monthlyCollection = Payment::select(
+            DB::raw('DATE_FORMAT(payment_date, "%M %Y") as month_label'),
+            DB::raw('DATE_FORMAT(payment_date, "%Y-%m") as month_key'),
+            DB::raw('SUM(amount) as total')
+        )
+        ->groupBy('month_key', 'month_label')
+        ->orderBy('month_key', 'desc')
+        ->limit(6)
+        ->get()
+        ->reverse()
+        ->values();
 
-        // ============================================
-        // LEADS CONVERSION FUNNEL
-        // ============================================
-        $totalLeads = Lead::count();
-        $contactedLeads = Lead::whereIn('status', ['contacted', 'counselling_done', 'converted'])->count();
-        $counsellingDone = Lead::whereIn('status', ['counselling_done', 'converted'])->count();
-        $convertedLeads = Lead::where('status', 'converted')->count();
+        // 2. Attendance Trend (Last 6 Months)
+        $attendanceTrend = Attendance::select(
+            DB::raw('DATE_FORMAT(date, "%M %Y") as month_label'),
+            DB::raw('DATE_FORMAT(date, "%Y-%m") as month_key'),
+            DB::raw('COUNT(*) as total_records'),
+            DB::raw('SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as present_count')
+        )
+        ->groupBy('month_key', 'month_label')
+        ->orderBy('month_key', 'desc')
+        ->limit(6)
+        ->get()
+        ->reverse()
+        ->map(function($item) {
+            $item->percentage = $item->total_records > 0 ? round(($item->present_count / $item->total_records) * 100, 1) : 0;
+            return $item;
+        })
+        ->values();
 
-        $funnelData = [
-            'new' => $totalLeads,
-            'contacted' => $contactedLeads,
-            'counselling' => $counsellingDone,
-            'converted' => $convertedLeads,
-        ];
+        // 3. Lead Conversion Trend (Last 6 Months)
+        $leadConversionTrend = Lead::select(
+            DB::raw('DATE_FORMAT(created_at, "%M %Y") as month_label'),
+            DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month_key'),
+            DB::raw('COUNT(*) as total_leads'),
+            DB::raw('SUM(CASE WHEN status = "converted" THEN 1 ELSE 0 END) as converted_count')
+        )
+        ->groupBy('month_key', 'month_label')
+        ->orderBy('month_key', 'desc')
+        ->limit(6)
+        ->get()
+        ->reverse()
+        ->values();
 
         // ============================================
         // ACTIONABLE PANELS
@@ -158,8 +173,9 @@ class DashboardController extends Controller
             'followupsToday', 'overdueFollowups', 'convertedThisMonth',
             
             // Chart Data
-            'chartLabels', 'chartData',
-            'funnelData',
+            'monthlyCollection', 
+            'attendanceTrend',
+            'leadConversionTrend',
             
             // Actionable Panels
             'todayFollowups',

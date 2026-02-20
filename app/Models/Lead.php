@@ -16,6 +16,7 @@ class Lead extends Model
         'next_followup_date' => 'date',
         'counselling_date' => 'date',
         'estimated_joining_date' => 'date',
+        'joining_date' => 'date',
     ];
 
     public function branch()

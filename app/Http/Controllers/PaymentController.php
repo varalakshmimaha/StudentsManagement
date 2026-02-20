@@ -160,4 +160,19 @@ class PaymentController extends Controller
 
         return redirect()->route('payments.index')->with('success', 'Payment deleted and status updated.');
     }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        $payment = \App\Models\Payment::with(['student', 'collectedBy'])->findOrFail($id);
+        
+        // Calculate payment summary
+        $student = $payment->student;
+        $totalPaid = \App\Models\Payment::where('student_id', $student->id)->sum('amount');
+        $balance = $student->final_fee - $totalPaid;
+        
+        return view('payments.show', compact('payment', 'totalPaid', 'balance'));
+    }
 }

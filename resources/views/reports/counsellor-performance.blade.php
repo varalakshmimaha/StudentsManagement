@@ -6,7 +6,13 @@
 <div class="container mx-auto px-6 py-8">
     <div class="flex justify-between items-center mb-6">
         <h3 class="text-gray-700 text-3xl font-medium">Counsellor Performance Report</h3>
-        <a href="{{ route('reports.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Back</a>
+        <div class="flex space-x-2">
+            <a href="{{ route('reports.export-counsellor-report') }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-bold flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Export CSV
+            </a>
+            <a href="{{ route('reports.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Back</a>
+        </div>
     </div>
 
     <div class="bg-white shadow rounded-lg overflow-hidden">

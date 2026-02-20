@@ -20,6 +20,11 @@ class BatchController extends Controller
             $query->where('branch_id', $request->branch);
         }
 
+        // Support branch_id param for AJAX dependent dropdown
+        if ($request->has('branch_id') && $request->branch_id != '') {
+            $query->where('branch_id', $request->branch_id);
+        }
+
         if ($request->has('course') && $request->course != '') {
             $query->where('course_id', $request->course);
         }
@@ -38,6 +43,11 @@ class BatchController extends Controller
 
         if ($request->has('search') && $request->search != '') {
             $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // Return JSON if AJAX request (for dependent dropdown)
+        if ($request->ajax()) {
+            return response()->json($query->get(['id', 'name']));
         }
 
         $batches = $query->latest()->paginate(10);

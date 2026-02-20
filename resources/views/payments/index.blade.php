@@ -17,16 +17,16 @@
 
     <div class="mt-8">
         <!-- Filters -->
-        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-6">
+        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-300 mb-6">
             <form method="GET" action="{{ route('payments.index') }}" class="flex flex-col lg:flex-row gap-4 items-end">
                 <div class="flex-grow">
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Search Payment</label>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search Receipt, Student..." class="bg-white border border-gray-300 rounded-md shadow-sm w-full py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search Receipt, Student..." class="bg-white border border-gray-400 rounded-md shadow-sm w-full py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 
                 <div class="w-full lg:w-48">
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Mode</label>
-                    <select name="payment_mode" class="bg-white border border-gray-300 rounded-md shadow-sm w-full py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select name="payment_mode" class="bg-white border border-gray-400 rounded-md shadow-sm w-full py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">All Modes</option>
                         <option value="Cash" {{ request('payment_mode') == 'Cash' ? 'selected' : '' }}>Cash</option>
                         <option value="Online" {{ request('payment_mode') == 'Online' ? 'selected' : '' }}>Online</option>
@@ -37,12 +37,12 @@
 
                 <div class="w-full lg:w-48">
                     <label class="block text-sm font-semibold text-gray-700 mb-1">From</label>
-                    <input type="date" name="date_from" value="{{ request('date_from') }}" class="bg-white border border-gray-300 rounded-md shadow-sm w-full py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="date" name="date_from" value="{{ request('date_from') }}" class="bg-white border border-gray-400 rounded-md shadow-sm w-full py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
                 <div class="w-full lg:w-48">
                     <label class="block text-sm font-semibold text-gray-700 mb-1">To</label>
-                    <input type="date" name="date_to" value="{{ request('date_to') }}" class="bg-white border border-gray-300 rounded-md shadow-sm w-full py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="date" name="date_to" value="{{ request('date_to') }}" class="bg-white border border-gray-400 rounded-md shadow-sm w-full py-2 px-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
                 <div class="flex gap-2 w-full lg:w-auto">
@@ -63,7 +63,8 @@
                                 <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Receipt No</th>
                                 <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                 <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Student</th>
-                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Paid Amount</th>
+                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Pending Amount</th>
                                 <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Mode</th>
                                 <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Collected By</th>
                                 <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -85,7 +86,15 @@
                                     <div class="text-xs leading-5 text-gray-500">{{ $payment->student->roll_number }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                                    <div class="text-sm leading-5 font-bold text-gray-900">${{ number_format($payment->amount, 2) }}</div>
+                                    <div class="text-sm leading-5 font-bold text-gray-900">₹{{ number_format($payment->amount, 2) }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                                    @php
+                                        $pending = $payment->student->final_fee - $payment->student->paid_amount;
+                                    @endphp
+                                    <div class="text-sm leading-5 font-bold {{ $pending > 0 ? 'text-red-600' : 'text-green-600' }}">
+                                        ₹{{ number_format($pending, 2) }}
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
@@ -106,7 +115,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-center text-gray-500">
+                                <td colspan="8" class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-center text-gray-500">
                                     No payments found.
                                 </td>
                             </tr>

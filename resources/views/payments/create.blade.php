@@ -2,6 +2,23 @@
 
 @section('title', 'Record Payment')
 
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .select2-container .select2-selection--single {
+        height: 38px !important;
+        border-color: #d1d5db !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 38px !important;
+        padding-left: 12px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container mx-auto px-6 py-8">
     <h3 class="text-gray-700 text-3xl font-medium">Record Payment</h3>
@@ -16,18 +33,18 @@
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="student_id">
                         Select Student <span class="text-red-500">*</span>
                     </label>
-                    <select onchange="updateDue(this)" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('student_id') border-red-500 @enderror" id="student_id" name="student_id">
-                        <option value="">Select Student</option>
+                    <select onchange="updateDue(this)" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('student_id') border-red-500 @enderror select2" id="student_id" name="student_id">
+                        <option value="">Search Student...</option>
                         @foreach($students as $student)
                             @php
                                 $due = $student->total_fee - $student->paid_amount;
                             @endphp
                             <option value="{{ $student->id }}" data-due="{{ $due }}" {{ old('student_id') == $student->id ? 'selected' : '' }}>
-                                {{ $student->name }} ({{ $student->roll_number }})
+                                {{ $student->name }} ({{ $student->roll_number }}) - Due: ₹{{ number_format($due, 2) }}
                             </option>
                         @endforeach
                     </select>
-                    <p class="text-gray-500 text-xs mt-1" id="due_display">Select a student to see balance due.</p>
+                    <p class="text-gray-500 text-xs mt-2" id="due_display">Select a student to see balance due.</p>
                     @error('student_id') <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p> @enderror
                 </div>
 
@@ -46,7 +63,7 @@
                         Amount Paid <span class="text-red-500">*</span>
                     </label>
                     <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('amount') border-red-500 @enderror" id="amount" type="number" step="0.01" name="amount" value="{{ old('amount') }}" placeholder="0.00">
-                     <p class="text-gray-500 text-xs mt-1"><a href="#" onclick="fillDue(); return false;" class="text-blue-500">Pay Full Due</a></p>
+                     <p class="text-gray-500 text-xs mt-1"><a href="#" onclick="fillDue(); return false;" class="text-blue-500 font-semibold hover:underline">Pay Full Due</a></p>
                     @error('amount') <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p> @enderror
                 </div>
 
@@ -91,14 +108,34 @@
     </div>
 </div>
 
+@push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            placeholder: "Search for a student...",
+            allowClear: true
+        });
+
+        $('#student_id').on('change', function() {
+            updateDue(this);
+        });
+
+        if($('#student_id').val()) {
+            updateDue(document.getElementById('student_id'));
+        }
+    });
+
     function updateDue(select) {
         var selectedOption = select.options[select.selectedIndex];
+        if (!selectedOption) return;
+        
         var due = selectedOption.getAttribute('data-due');
         var display = document.getElementById('due_display');
         
         if(due !== null && select.value !== "") {
-            display.innerHTML = 'Balance Due: <span class="font-bold text-red-600">$' + parseFloat(due).toFixed(2) + '</span>';
+            display.innerHTML = 'Balance Due: <span class="font-bold text-red-600">₹' + parseFloat(due).toLocaleString('en-IN', {minimumFractionDigits: 2}) + '</span>';
         } else {
             display.innerText = 'Select a student to see balance due.';
         }
@@ -115,13 +152,6 @@
             alert('Please select a student first.');
         }
     }
-    
-    // Check on load
-     document.addEventListener('DOMContentLoaded', function() {
-        var select = document.getElementById('student_id');
-        if(select.value) {
-            updateDue(select);
-        }
-    });
 </script>
+@endpush
 @endsection

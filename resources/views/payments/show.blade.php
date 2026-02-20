@@ -35,17 +35,35 @@
             </div>
         </div>
 
-        <div class="border-t border-b border-gray-200 py-4 mb-8">
+        <div class="border-t border-b border-gray-200 py-4 mb-4">
             <div class="flex justify-between items-center font-bold text-gray-700">
                 <span class="text-lg">Amount Paid</span>
-                <span class="text-2xl">${{ number_format($payment->amount, 2) }}</span>
+                <span class="text-2xl">₹{{ number_format($payment->amount, 2) }}</span>
             </div>
-             @if($payment->transaction_ref)
+            @if($payment->transaction_ref)
             <div class="flex justify-between items-center text-gray-500 text-sm mt-2">
                 <span>Reference / Cheque No</span>
                 <span>{{ $payment->transaction_ref }}</span>
             </div>
             @endif
+        </div>
+
+        <!-- Fee Summary Section -->
+        <div class="mb-8 grid grid-cols-2 gap-4 text-sm mt-4 border-b border-gray-200 pb-4">
+            <div>
+                <p class="text-gray-500">Total Course Fee</p>
+                <p class="font-semibold text-gray-800">₹{{ number_format($payment->student->final_fee, 2) }}</p>
+            </div>
+            <div class="text-right">
+                <p class="text-gray-500">Total Paid (To Date)</p>
+                <p class="font-semibold text-green-600">₹{{ number_format($totalPaid, 2) }}</p>
+            </div>
+            <div class="col-span-2 flex justify-between items-center pt-2 mt-2 border-t border-dashed border-gray-200">
+                <span class="text-gray-500 font-medium">Pending Balance</span>
+                <span class="font-bold {{ $balance > 0 ? 'text-red-600' : 'text-green-600' }}">
+                    ₹{{ number_format($balance, 2) }}
+                </span>
+            </div>
         </div>
         
         <div class="mb-8">

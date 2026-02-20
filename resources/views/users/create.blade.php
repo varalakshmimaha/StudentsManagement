@@ -97,6 +97,21 @@
                     </div>
                     @error('branches') <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p> @enderror
                 </div>
+
+                <!-- Permissions (Modules) -->
+                <div class="col-span-1 md:col-span-2 mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Assign Module Access (Permissions)
+                    </label>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        @foreach($permissions as $permission)
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" class="form-checkbox h-5 w-5 text-green-600" {{ in_array($permission->id, old('permissions', [])) ? 'checked' : '' }}>
+                                <span class="ml-2 text-gray-700">{{ ucwords(str_replace('view ', '', $permission->name)) }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
             </div>
 
             <div class="flex items-center justify-between mt-8">

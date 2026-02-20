@@ -53,7 +53,8 @@ class UserController extends Controller
     {
         $roles = \App\Models\Role::where('status', 'active')->get();
         $branches = \App\Models\Branch::where('status', 'active')->get();
-        return view('users.create', compact('roles', 'branches'));
+        $permissions = \App\Models\Permission::all();
+        return view('users.create', compact('roles', 'branches', 'permissions'));
     }
 
     /**
@@ -81,6 +82,10 @@ class UserController extends Controller
             $user->branches()->sync($request->branches);
         }
 
+        if ($request->has('permissions')) {
+            $user->permissions()->sync($request->permissions);
+        }
+
         if ($request->has('save_and_new')) {
             return redirect()->route('users.create')->with('success', 'User created successfully.');
         }
@@ -102,11 +107,12 @@ class UserController extends Controller
      */
     public function edit(string $id)
     {
-        $user = \App\Models\User::with('branches')->findOrFail($id);
+        $user = \App\Models\User::with('branches', 'permissions')->findOrFail($id);
         $roles = \App\Models\Role::all(); // Show all roles even inactive ones for editing? Maybe restricted to active.
         $branches = \App\Models\Branch::all();
+        $permissions = \App\Models\Permission::all();
         
-        return view('users.edit', compact('user', 'roles', 'branches'));
+        return view('users.edit', compact('user', 'roles', 'branches', 'permissions'));
     }
 
     /**
@@ -144,6 +150,12 @@ class UserController extends Controller
              // Multiselect usually sends nothing if nothing selected.
              // We should check if intention was to update branches.
              $user->branches()->detach();
+        }
+
+        if ($request->has('permissions')) {
+            $user->permissions()->sync($request->permissions);
+        } else {
+            $user->permissions()->detach();
         }
 
         return redirect()->route('users.index')->with('success', 'User updated successfully.');

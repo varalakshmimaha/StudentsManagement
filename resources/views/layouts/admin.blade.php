@@ -9,9 +9,10 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
     </style>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-    <div class="flex h-screen overflow-hidden">
+    <div x-data="{ sidebarOpen: false, profileOpen: false }" class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
         <x-sidebar />
 

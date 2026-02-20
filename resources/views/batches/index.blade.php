@@ -17,7 +17,7 @@
 
     <div class="mt-8">
         <!-- Filters -->
-        <form method="GET" action="{{ route('batches.index') }}" class="mb-4 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <form method="GET" action="{{ route('batches.index') }}" class="mb-4 bg-white p-6 rounded-lg shadow-md border border-gray-300">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Search -->
                 <div>
@@ -89,17 +89,17 @@
                 <div class="align-middle inline-block min-w-full shadow overflow-hidden sm:rounded-lg border-b border-gray-200">
                     <table class="min-w-full">
                         <thead>
-                            <tr>
-                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Batch Name</th>
-                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Branch</th>
-                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Course</th>
-                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
-                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">End Date</th>
-                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Total Fee</th>
-                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Teacher(s)</th>
-                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Students</th>
-                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <tr class="bg-indigo-50/50 border-b border-indigo-100">
+                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">Batch Name</th>
+                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">Branch</th>
+                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">Course</th>
+                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">Start Date</th>
+                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">End Date</th>
+                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">Total Fee</th>
+                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">Teacher(s)</th>
+                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">Students</th>
+                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-black text-black uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white">

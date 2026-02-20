@@ -8,7 +8,7 @@
         <h3 class="text-gray-700 text-3xl font-medium">Lead Details: {{ $lead->name }}</h3>
         <div class="flex space-x-2">
             <a href="{{ route('leads.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Back</a>
-             @if(in_array($lead->status, ['interested', 'counselling_done']) && !$lead->student)
+             @if(in_array($lead->status, ['interested', 'counselling_done', 'converted']) && !$lead->student)
                 <a href="{{ route('students.create', ['lead_id' => $lead->id]) }}" class="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-500 font-medium">Convert to Student</a>
             @elseif($lead->student)
                 <span class="px-4 py-2 bg-green-100 text-green-800 rounded-md font-medium border border-green-200">Converted</span>
@@ -52,21 +52,21 @@
             <!-- Personal Info -->
             <h4 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">Personal Details</h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                 <div>
+                <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2">Lead Name</label>
-                    <input type="text" name="name" value="{{ old('name', $lead->name) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                    <input type="text" name="name" value="{{ old('name', $lead->name) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">
                 </div>
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2">Phone</label>
-                    <input type="text" name="phone" value="{{ old('phone', $lead->phone) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                    <input type="text" name="phone" value="{{ old('phone', $lead->phone) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">
                 </div>
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2">Email</label>
-                    <input type="email" name="email" value="{{ old('email', $lead->email) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                    <input type="email" name="email" value="{{ old('email', $lead->email) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">
                 </div>
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2">Source</label>
-                     <select name="source" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                     <select name="source" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">
                          @foreach(['Walk-in', 'Referral', 'Website', 'Instagram', 'WhatsApp', 'Call'] as $src)
                             <option value="{{ $src }}" {{ $lead->source == $src ? 'selected' : '' }}>{{ $src }}</option>
                          @endforeach
@@ -74,7 +74,7 @@
                 </div>
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2">Preferred Branch</label>
-                    <select name="preferred_branch_id" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                    <select name="preferred_branch_id" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">
                         <option value="">Select</option>
                         @foreach($branches as $branch)
                             <option value="{{ $branch->id }}" {{ $lead->preferred_branch_id == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
@@ -83,7 +83,7 @@
                 </div>
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2">Assigned Counsellor</label>
-                    <select name="assigned_counsellor_id" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                    <select name="assigned_counsellor_id" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">
                         <option value="">Select</option>
                         @foreach($counsellors as $counsellor)
                             <option value="{{ $counsellor->id }}" {{ $lead->assigned_counsellor_id == $counsellor->id ? 'selected' : '' }}>{{ $counsellor->name }}</option>
@@ -92,11 +92,44 @@
                 </div>
                 <div>
                      <label class="block text-gray-700 text-sm font-bold mb-2">Status</label>
-                     <select name="status" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                     <select name="status" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">
                          @foreach(['new', 'contacted', 'scheduled', 'counselling_done', 'interested', 'not_interested', 'lost', 'converted'] as $status)
                             <option value="{{ $status }}" {{ $lead->status == $status ? 'selected' : '' }}>{{ ucfirst(str_replace('_', ' ', $status)) }}</option>
                          @endforeach
                      </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Interested Courses</label>
+                    <div class="relative" id="course-multi-select">
+                        <div id="selected-box" class="shadow appearance-none border border-gray-400 rounded w-full py-1.5 px-3 text-gray-700 leading-tight focus-within:ring-2 focus-within:ring-blue-500 bg-white min-h-[42px] flex flex-wrap gap-2 items-center cursor-pointer justify-between" onclick="document.getElementById('course-dropdown').classList.toggle('hidden')">
+                            <div id="selected-tags" class="flex flex-wrap gap-2">
+                                <!-- Tags will be injected here -->
+                            </div>
+                            <span id="placeholder-text" class="text-gray-400 text-sm">Select courses...</span>
+                            <div class="ml-auto">
+                                <svg class="fill-current h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                            </div>
+                        </div>
+                        
+                        <div id="course-dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-400 rounded shadow-2xl hidden max-h-60 overflow-y-auto">
+                            @php
+                                $currentLeadCourses = old('interested_courses', $lead->interested_courses ?? []);
+                            @endphp
+                            @foreach($courses as $course)
+                                <div class="course-option px-4 py-2.5 hover:bg-blue-100 cursor-pointer text-sm flex items-center justify-between border-b last:border-0 border-gray-200" 
+                                     onclick="toggleCourse('{{ $course->name }}')"
+                                     data-course="{{ $course->name }}">
+                                    <span class="font-medium text-gray-900">{{ $course->name }}</span>
+                                    <svg class="check-icon h-5 w-5 text-blue-600 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                            @endforeach
+                        </div>
+                        
+                        <!-- Real hidden inputs for the form -->
+                        <div id="hidden-course-inputs"></div>
+                    </div>
                 </div>
             </div>
 
@@ -105,11 +138,11 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2">Current Address</label>
-                    <textarea name="current_address" rows="3" class="shadow border rounded w-full py-2 px-3 text-gray-700">{{ old('current_address', $lead->current_address) }}</textarea>
+                    <textarea name="current_address" rows="3" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">{{ old('current_address', $lead->current_address) }}</textarea>
                 </div>
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2">Permanent Address</label>
-                    <textarea name="permanent_address" rows="3" class="shadow border rounded w-full py-2 px-3 text-gray-700">{{ old('permanent_address', $lead->permanent_address) }}</textarea>
+                    <textarea name="permanent_address" rows="3" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">{{ old('permanent_address', $lead->permanent_address) }}</textarea>
                 </div>
             </div>
 
@@ -118,15 +151,15 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2">Highest Qualification</label>
-                    <input type="text" name="highest_qualification" value="{{ old('highest_qualification', $lead->highest_qualification) }}" placeholder="e.g. B.Tech" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                    <input type="text" name="highest_qualification" value="{{ old('highest_qualification', $lead->highest_qualification) }}" placeholder="e.g. B.Tech" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">
                 </div>
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2">College Name</label>
-                    <input type="text" name="college_name" value="{{ old('college_name', $lead->college_name) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                    <input type="text" name="college_name" value="{{ old('college_name', $lead->college_name) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">
                 </div>
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2">Percentage / CGPA</label>
-                    <input type="number" step="0.01" name="percentage" value="{{ old('percentage', $lead->percentage) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                    <input type="number" step="0.01" name="percentage" value="{{ old('percentage', $lead->percentage) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">
                 </div>
             </div>
 
@@ -135,7 +168,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2">Relation Type</label>
-                    <select name="parent_type" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                    <select name="parent_type" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">
                         <option value="">Select</option>
                         <option value="Father" {{ $lead->parent_type == 'Father' ? 'selected' : '' }}>Father</option>
                         <option value="Mother" {{ $lead->parent_type == 'Mother' ? 'selected' : '' }}>Mother</option>
@@ -144,15 +177,15 @@
                 </div>
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2">Parent Name</label>
-                    <input type="text" name="parent_name" value="{{ old('parent_name', $lead->parent_name) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                    <input type="text" name="parent_name" value="{{ old('parent_name', $lead->parent_name) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">
                 </div>
                  <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2">Parent Mobile</label>
-                    <input type="text" name="parent_mobile" value="{{ old('parent_mobile', $lead->parent_mobile) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                    <input type="text" name="parent_mobile" value="{{ old('parent_mobile', $lead->parent_mobile) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">
                 </div>
                  <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2">Parent Email</label>
-                    <input type="email" name="parent_email" value="{{ old('parent_email', $lead->parent_email) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                    <input type="email" name="parent_email" value="{{ old('parent_email', $lead->parent_email) }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">
                 </div>
             </div>
             <div class="mt-6 flex justify-end">
@@ -169,11 +202,11 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Counselling Date</label>
-                    <input type="date" name="counselling_date" value="{{ old('counselling_date', $lead->counselling_date ? $lead->counselling_date->format('Y-m-d') : '') }}" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                    <input type="date" name="counselling_date" value="{{ old('counselling_date', $lead->counselling_date ? $lead->counselling_date->format('Y-m-d') : '') }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Outcome</label>
-                    <select name="counselling_outcome" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                    <select name="counselling_outcome" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">
                         <option value="">Select Outcome</option>
                         <option value="Interested" {{ $lead->counselling_outcome == 'Interested' ? 'selected' : '' }}>Interested</option>
                         <option value="Not Interested" {{ $lead->counselling_outcome == 'Not Interested' ? 'selected' : '' }}>Not Interested</option>
@@ -183,11 +216,11 @@
                 </div>
                 <div class="mb-4 col-span-2">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Estimated Joining Date</label>
-                     <input type="date" name="estimated_joining_date" value="{{ old('estimated_joining_date', $lead->estimated_joining_date ? $lead->estimated_joining_date->format('Y-m-d') : '') }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 md:w-1/2">
+                     <input type="date" name="estimated_joining_date" value="{{ old('estimated_joining_date', $lead->estimated_joining_date ? $lead->estimated_joining_date->format('Y-m-d') : '') }}" class="shadow border rounded w-full py-2 px-3 text-gray-700 md:w-1/2 border-gray-400">
                 </div>
                  <div class="mb-4 col-span-2">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Counselling Notes</label>
-                    <textarea name="counselling_notes" rows="5" class="shadow border rounded w-full py-2 px-3 text-gray-700">{{ old('counselling_notes', $lead->counselling_notes) }}</textarea>
+                    <textarea name="counselling_notes" rows="5" class="shadow border rounded w-full py-2 px-3 text-gray-700 border-gray-400">{{ old('counselling_notes', $lead->counselling_notes) }}</textarea>
                 </div>
             </div>
             <div class="mt-6 flex justify-end">
@@ -199,7 +232,7 @@
     <!-- Tab 3: Call Logs -->
     <div id="content-logs" class="tab-content mt-8 hidden">
         <!-- Add Log Form -->
-        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6 shadow-sm">
             <h4 class="font-bold text-gray-700 mb-4">Add Follow-up / Call Log</h4>
             <form action="{{ route('lead_followups.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 @csrf
@@ -207,7 +240,7 @@
                 
                 <div>
                     <label class="block text-gray-700 text-xs font-bold mb-1">Outcome</label>
-                    <select name="outcome" class="shadow border rounded w-full py-2 px-3 text-sm text-gray-700">
+                    <select name="outcome" class="shadow border rounded w-full py-2 px-3 text-sm text-gray-700 border-gray-400">
                          <option value="Not reachable">Not reachable</option>
                          <option value="Call back later">Call back later</option>
                          <option value="Interested">Interested</option>
@@ -217,11 +250,11 @@
                 </div>
                 <div>
                      <label class="block text-gray-700 text-xs font-bold mb-1">Next Follow-up Date</label>
-                     <input type="date" name="next_followup_date" class="shadow border rounded w-full py-2 px-3 text-sm text-gray-700">
+                     <input type="date" name="next_followup_date" class="shadow border rounded w-full py-2 px-3 text-sm text-gray-700 border-gray-400">
                 </div>
                  <div class="md:col-span-2">
                      <label class="block text-gray-700 text-xs font-bold mb-1">Notes</label>
-                     <input type="text" name="notes" placeholder="Call summary..." class="shadow border rounded w-full py-2 px-3 text-sm text-gray-700">
+                     <input type="text" name="notes" placeholder="Call summary..." class="shadow border rounded w-full py-2 px-3 text-sm text-gray-700 border-gray-400">
                 </div>
                 <div>
                     <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-500 text-sm font-bold">Add Log</button>
@@ -230,7 +263,7 @@
         </div>
 
         <!-- Logs Table -->
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead>
                     <tr>
@@ -247,7 +280,7 @@
                         <td class="px-6 py-4 whitespace-no-wrap text-sm text-gray-500">
                             {{ $log->created_at->format('d M Y, h:i A') }}
                         </td>
-                         <td class="px-6 py-4 whitespace-no-wrap text-sm font-medium text-gray-900">
+                         <td class="px-6 py-4 whitespace-no-wrap text-sm font-medium text-gray-900 font-bold">
                             {{ $log->outcome }}
                         </td>
                          <td class="px-6 py-4 text-sm text-gray-500">
@@ -261,7 +294,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No logs found.</td></tr>
+                    <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500 italic">No logs found.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -283,5 +316,78 @@
         document.getElementById('tab-' + tabName).classList.remove('border-transparent', 'text-gray-500');
         document.getElementById('tab-' + tabName).classList.add('border-indigo-500', 'text-indigo-600');
     }
+
+    // MULTI-SELECT GLOBS
+    let selectedCourses = @json($currentLeadCourses);
+
+    function toggleCourse(course) {
+        const index = selectedCourses.indexOf(course);
+        if (index > -1) {
+            selectedCourses.splice(index, 1);
+        } else {
+            selectedCourses.push(course);
+        }
+        updateUI();
+    }
+
+    function removeCourse(course, event) {
+        event.stopPropagation();
+        toggleCourse(course);
+    }
+
+    function updateUI() {
+        const tagsContainer = document.getElementById('selected-tags');
+        const hiddenInputs = document.getElementById('hidden-course-inputs');
+        const placeholder = document.getElementById('placeholder-text');
+        
+        if(!tagsContainer) return;
+
+        tagsContainer.innerHTML = '';
+        hiddenInputs.innerHTML = '';
+        
+        if (selectedCourses.length > 0) {
+            placeholder.classList.add('hidden');
+            selectedCourses.forEach(course => {
+                // Add Tag
+                const tag = document.createElement('span');
+                tag.className = 'bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded flex items-center gap-1 border border-blue-200';
+                tag.innerHTML = `${course} <button type="button" onclick="removeCourse('${course}', event)" class="hover:text-blue-900 font-bold">&times;</button>`;
+                tagsContainer.appendChild(tag);
+                
+                // Add Hidden Input
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'interested_courses[]';
+                input.value = course;
+                hiddenInputs.appendChild(input);
+            });
+        } else {
+            placeholder.classList.remove('hidden');
+        }
+        
+        // Update all icons in dropdown
+        document.querySelectorAll('.course-option').forEach(opt => {
+            const courseValue = opt.getAttribute('data-course');
+            if (selectedCourses.includes(courseValue)) {
+                opt.querySelector('.check-icon').classList.remove('hidden');
+                opt.classList.add('bg-blue-50');
+            } else {
+                opt.querySelector('.check-icon').classList.add('hidden');
+                opt.classList.remove('bg-blue-50');
+            }
+        });
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        const select = document.getElementById('course-multi-select');
+        const dropdown = document.getElementById('course-dropdown');
+        if (select && !select.contains(event.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    // Initialize UI
+    document.addEventListener('DOMContentLoaded', updateUI);
 </script>
 @endsection

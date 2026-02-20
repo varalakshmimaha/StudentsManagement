@@ -78,12 +78,32 @@
                         <div class="font-medium text-gray-900">{{ $student->mobile ?? '-' }}</div>
                     </div>
                     <div class="col-span-1 md:col-span-2">
-                        <span class="text-gray-500 text-sm">Current Address</span>
-                        <div class="font-medium text-gray-900">{{ $student->current_address ?? '-' }}</div>
+                        <span class="text-gray-500 text-sm font-bold uppercase tracking-wider">Current Address</span>
+                        <div class="mt-2 bg-gray-50 p-4 rounded-xl border border-gray-100 text-gray-700">
+                             <div class="mb-2 pb-2 border-b border-gray-200">
+                                 <span class="text-[10px] text-gray-400 block uppercase font-black tracking-widest mb-1">Address Line</span>
+                                 <div class="font-medium">{{ $student->current_address ?? '-' }}</div>
+                             </div>
+                             <div class="grid grid-cols-3 gap-4">
+                                 <div><span class="text-[10px] text-gray-400 block uppercase font-black tracking-widest mb-1">City</span><div class="font-medium">{{ $student->current_city ?? '-' }}</div></div>
+                                 <div><span class="text-[10px] text-gray-400 block uppercase font-black tracking-widest mb-1">State</span><div class="font-medium">{{ $student->current_state ?? '-' }}</div></div>
+                                 <div><span class="text-[10px] text-gray-400 block uppercase font-black tracking-widest mb-1">Pincode</span><div class="font-medium">{{ $student->current_pincode ?? '-' }}</div></div>
+                             </div>
+                        </div>
                     </div>
-                    <div class="col-span-1 md:col-span-2">
-                        <span class="text-gray-500 text-sm">Permanent Address</span>
-                        <div class="font-medium text-gray-900">{{ $student->permanent_address ?? '-' }}</div>
+                    <div class="col-span-1 md:col-span-2 mt-4">
+                        <span class="text-gray-500 text-sm font-bold uppercase tracking-wider">Permanent Address</span>
+                        <div class="mt-2 bg-gray-50 p-4 rounded-xl border border-gray-100 text-gray-700">
+                             <div class="mb-2 pb-2 border-b border-gray-200">
+                                 <span class="text-[10px] text-gray-400 block uppercase font-black tracking-widest mb-1">Address Line</span>
+                                 <div class="font-medium">{{ $student->permanent_address ?? '-' }}</div>
+                             </div>
+                             <div class="grid grid-cols-3 gap-4">
+                                 <div><span class="text-[10px] text-gray-400 block uppercase font-black tracking-widest mb-1">City</span><div class="font-medium">{{ $student->permanent_city ?? '-' }}</div></div>
+                                 <div><span class="text-[10px] text-gray-400 block uppercase font-black tracking-widest mb-1">State</span><div class="font-medium">{{ $student->permanent_state ?? '-' }}</div></div>
+                                 <div><span class="text-[10px] text-gray-400 block uppercase font-black tracking-widest mb-1">Pincode</span><div class="font-medium">{{ $student->permanent_pincode ?? '-' }}</div></div>
+                             </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -113,25 +133,98 @@
         <!-- Sidebar: Fee & Stats -->
         <div class="col-span-1 space-y-6">
             <!-- Fee Summary -->
-            <div class="bg-white shadow rounded-lg overflow-hidden">
-                <div class="px-4 py-3 border-b border-gray-200 font-semibold bg-gray-50">
-                    Fee Summary
+            <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-100">
+                <div class="px-4 py-3 border-b border-gray-200 font-semibold bg-gray-50 flex items-center justify-between">
+                    <span>Fee Summary</span>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded-full
+                        {{ $student->after_placement_fee ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600' }}">
+                        {{ $student->after_placement_fee ? 'Placement Model' : 'Standard Model' }}
+                    </span>
                 </div>
-                <div class="p-4">
-                    <div class="flex justify-between mb-2">
-                        <span class="text-gray-600">Total Fee:</span>
-                        <span class="font-bold">${{ number_format($student->total_fee, 2) }}</span>
+                <div class="p-4 space-y-2 text-sm">
+                    @php
+                        $trainingFee    = $student->training_fee ?? 0;
+                        $placementFee   = $student->after_placement_amount ?? 0;
+                        $discount       = $student->discount ?? 0;
+                        $totalContract  = $student->total_contract;
+                        $payableNow     = $student->payable_now;
+                        $paid           = $student->paid_amount;
+                        $balance        = $student->balance;
+                        $credit         = $student->credit;
+                    @endphp
+
+                    {{-- Training Fee --}}
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Training Fee:</span>
+                        <span class="font-semibold text-gray-900">₹{{ number_format($trainingFee, 2) }}</span>
                     </div>
-                    <div class="flex justify-between mb-2">
+
+                    {{-- Placement Fee (only for placement model) --}}
+                    @if($student->after_placement_fee)
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Placement Fee:
+                            @if($student->status !== 'placed')
+                                <span class="text-xs text-amber-600 font-bold">(locked)</span>
+                            @endif
+                        </span>
+                        <span class="font-semibold {{ $student->status === 'placed' ? 'text-green-700' : 'text-gray-400' }}">
+                            ₹{{ number_format($placementFee, 2) }}
+                        </span>
+                    </div>
+                    @endif
+
+                    {{-- Discount --}}
+                    @if($discount > 0)
+                    <div class="flex justify-between text-green-600">
+                        <span>Discount:</span>
+                        <span class="font-semibold">-₹{{ number_format($discount, 2) }}</span>
+                    </div>
+                    @endif
+
+                    {{-- Total Contract --}}
+                    <div class="flex justify-between border-t pt-2 mt-1">
+                        <span class="text-gray-600 font-medium">Total Fee:</span>
+                        <span class="font-semibold text-gray-900">₹{{ number_format($totalContract, 2) }}</span>
+                    </div>
+
+                    {{-- Payable Now (phase-based highlight) --}}
+                    <div class="flex justify-between bg-indigo-50 rounded px-2 py-1.5">
+                        <span class="text-indigo-700 font-bold">Payable Now:</span>
+                        <span class="font-bold text-indigo-700">₹{{ number_format($payableNow, 2) }}</span>
+                    </div>
+
+                    {{-- Paid --}}
+                    <div class="flex justify-between">
                         <span class="text-gray-600">Paid:</span>
-                        <span class="font-bold text-green-600">${{ number_format($student->paid_amount, 2) }}</span>
+                        <span class="font-semibold text-green-600">₹{{ number_format($paid, 2) }}</span>
                     </div>
-                    <div class="border-t pt-2 flex justify-between">
-                        <span class="text-gray-600">Balance Due:</span>
-                        <span class="font-bold text-red-600">${{ number_format($student->total_fee - $student->paid_amount, 2) }}</span>
+
+                    {{-- Balance --}}
+                    <div class="flex justify-between border-t pt-2">
+                        <span class="text-gray-600 font-bold">Balance:</span>
+                        <span class="font-bold {{ $balance > 0 ? 'text-red-600' : 'text-green-600' }}">
+                            ₹{{ number_format($balance, 2) }}
+                        </span>
                     </div>
-                    <div class="mt-4 text-center">
-                         <span class="text-xs text-gray-500">Payment Mode: {{ $student->payment_mode ?? 'Not Set' }}</span>
+
+                    {{-- Credit (only show if overpaid) --}}
+                    @if($credit > 0)
+                    <div class="flex justify-between bg-green-50 rounded px-2 py-1.5">
+                        <span class="text-green-700 font-bold">Credit / Advance:</span>
+                        <span class="font-bold text-green-700">₹{{ number_format($credit, 2) }}</span>
+                    </div>
+                    @endif
+
+                    <div class="mt-3">
+                        @if($student->after_placement_fee && $student->status !== 'placed')
+                            <div class="bg-amber-50 border border-amber-200 text-amber-700 text-xs px-3 py-2 rounded-lg">
+                                ⏳ Placement fee of ₹{{ number_format($placementFee, 2) }} becomes payable once status changes to <strong>Placed</strong>.
+                            </div>
+                        @elseif($student->after_placement_fee && $student->status === 'placed')
+                            <div class="bg-green-50 border border-green-200 text-green-700 text-xs px-3 py-2 rounded-lg">
+                                ✅ Student is placed. Full fee (Training + Placement) is now payable.
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -145,7 +238,7 @@
                     @forelse($student->payments()->latest()->take(3)->get() as $payment)
                         <li class="px-4 py-3 text-sm">
                             <div class="flex justify-between">
-                                <span class="font-medium">${{ number_format($payment->amount) }}</span>
+                                <span class="font-medium">₹{{ number_format($payment->amount) }}</span>
                                 <span class="text-gray-500">{{ $payment->payment_date->format('d M') }}</span>
                             </div>
                         </li>

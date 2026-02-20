@@ -14,7 +14,7 @@ class StudentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = \App\Models\Student::with(['branch', 'course', 'batch']);
+        $query = \App\Models\Student::with(['branch', 'course', 'batch'])->withSum('payments', 'amount');
 
         if ($request->has('branch') && $request->branch != '') {
             $query->where('branch_id', $request->branch);
@@ -92,7 +92,13 @@ class StudentController extends Controller
             'email' => 'nullable|email|max:255',
             'mobile' => 'required|string|max:20',
             'current_address' => 'nullable|string',
+            'current_city' => 'nullable|string|max:255',
+            'current_state' => 'nullable|string|max:255',
+            'current_pincode' => 'nullable|string|max:10',
             'permanent_address' => 'nullable|string',
+            'permanent_city' => 'nullable|string|max:255',
+            'permanent_state' => 'nullable|string|max:255',
+            'permanent_pincode' => 'nullable|string|max:10',
             'photo' => 'nullable|image|max:2048',
 
             // Academic
@@ -112,9 +118,12 @@ class StudentController extends Controller
 
             // Fee
             'total_fee' => 'required|numeric|min:0',
+            'training_fee' => 'required|numeric|min:0',
+            'after_placement_amount' => 'nullable|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
             'final_fee' => 'required|numeric|min:0',
             'payment_type' => 'required|in:full,installments',
+            'after_placement_fee' => 'required|boolean',
             'notes' => 'nullable|string',
 
             // Lead
@@ -126,9 +135,26 @@ class StudentController extends Controller
             $validated['photo'] = $path;
         }
 
+        $isPlacement = $request->after_placement_fee == '1';
+        $status = $request->status;
+        $trainingFee = (float) $request->training_fee;
+        $placementAmount = $isPlacement ? (float)($request->after_placement_amount ?? 0) : 0;
+        $discount = (float)($request->discount ?? 0);
+
+        // Total fee = training + placement (always, regardless of status)
+        $validated['total_fee'] = $trainingFee + $placementAmount;
+
+        // Payable now = training - discount; + placement only if placed
+        $payable = $trainingFee - $discount;
+        if ($isPlacement && $status === 'placed') {
+            $payable += $placementAmount;
+        }
+        $validated['final_fee'] = max(0, $payable);
+        $validated['after_placement_fee'] = $isPlacement;
+
         // Set default fee status
         $validated['fee_status'] = 'unpaid';
-
+        
         $student = \App\Models\Student::create($validated);
         
         // Handle Lead Conversion
@@ -177,13 +203,19 @@ class StudentController extends Controller
         $student = \App\Models\Student::findOrFail($id);
 
         $validated = $request->validate([
-             // Personal
+            // Personal
             'name' => 'required|string|max:255',
             'roll_number' => 'required|string|max:50|unique:students,roll_number,' . $id,
             'email' => 'nullable|email|max:255',
             'mobile' => 'required|string|max:20',
             'current_address' => 'nullable|string',
+            'current_city' => 'nullable|string|max:255',
+            'current_state' => 'nullable|string|max:255',
+            'current_pincode' => 'nullable|string|max:10',
             'permanent_address' => 'nullable|string',
+            'permanent_city' => 'nullable|string|max:255',
+            'permanent_state' => 'nullable|string|max:255',
+            'permanent_pincode' => 'nullable|string|max:10',
             'photo' => 'nullable|image|max:2048',
 
             // Academic
@@ -203,9 +235,12 @@ class StudentController extends Controller
 
             // Fee
             'total_fee' => 'required|numeric|min:0',
+            'training_fee' => 'required|numeric|min:0',
+            'after_placement_amount' => 'nullable|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
             'final_fee' => 'required|numeric|min:0',
             'payment_type' => 'required|in:full,installments',
+            'after_placement_fee' => 'required|boolean',
             'notes' => 'nullable|string',
         ]);
 
@@ -215,12 +250,31 @@ class StudentController extends Controller
             $validated['photo'] = $path;
         }
 
+        $isPlacement = $request->after_placement_fee == '1';
+        $status = $request->status;
+        $trainingFee = (float) $request->training_fee;
+        $placementAmount = $isPlacement ? (float)($request->after_placement_amount ?? 0) : 0;
+        $discount = (float)($request->discount ?? 0);
+
+        // Total fee = training + placement (always)
+        $validated['total_fee'] = $trainingFee + $placementAmount;
+
+        // Payable now = training - discount; + placement only if placed
+        $payable = $trainingFee - $discount;
+        if ($isPlacement && $status === 'placed') {
+            $payable += $placementAmount;
+        }
+        $validated['final_fee'] = max(0, $payable);
+        $validated['after_placement_fee'] = $isPlacement;
+
         $student->update($validated);
-        
-        // Recalculate fee status in case fee changed
+        $student->refresh();
+
+        // Recalculate fee status using payable_now computed accessor
         $totalPaid = \App\Models\Payment::where('student_id', $student->id)->sum('amount');
+        $payableNow = $student->payable_now;
         $feeStatus = 'unpaid';
-        if ($totalPaid >= $student->final_fee) {
+        if ($totalPaid >= $payableNow && $payableNow > 0) {
             $feeStatus = 'fully_paid';
         } elseif ($totalPaid > 0) {
             $feeStatus = 'partial';
